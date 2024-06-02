@@ -1,5 +1,14 @@
 {
   "dependencies": {
+    "com.codewriter.triinspector": {
+      "version": "https://github.com/codewriter-packages/Tri-Inspector.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.localization": "1.0.0"
+      },
+      "hash": "0c5b8f4480f55bf4fdd21c8e6da9620571c3ff43"
+    },
     "com.unity.burst": {
       "version": "1.8.8",
       "depth": 1,
@@ -47,6 +56,13 @@
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
+    },
+    "com.unity.localization": {
+      "version": "https://github.com/codewriter-packages/Unity-Localization-Stub-for-Tri-Inspector.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "184244fa1721e8e5da6aff2aca29b92f0a1e5ec7"
     },
     "com.unity.mathematics": {
       "version": "1.2.6",

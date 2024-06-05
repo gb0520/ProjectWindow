@@ -8,6 +8,7 @@ using DG.Tweening;
 using static ProjWindow.GUI.Page;
 using UnityEngine.Events;
 using ZB.Extension;
+using UnityEngine.UIElements;
 
 namespace ProjWindow.GUI
 {
@@ -68,7 +69,7 @@ namespace ProjWindow.GUI
 			if (sizeState == SizeState.maximized)
 			{
 				enterPos = MouseInteract.GetCanvasPosition(Input.mousePosition, canvas) + Vector2.down * lastSize.y / 2;
-				rectTransform.anchoredPosition = enterPos;
+				SetAnchoredPos(enterPos);
 				SetRestore(false);
 			}
 
@@ -80,8 +81,7 @@ namespace ProjWindow.GUI
 		}
 		public void OnTitleBarDragUpdate()
 		{
-			lastPosition = titleBarDragEnterPos + dragModule.direction;
-			rectTransform.anchoredPosition = lastPosition;
+			SetAnchoredPos(titleBarDragEnterPos + dragModule.direction);
 		}
 		#endregion
 
@@ -92,6 +92,7 @@ namespace ProjWindow.GUI
 		public bool isMinimizeable;
 		public bool isMaximizeable;
 		public bool isResizable;
+		public Vector2 minSize;
 		[SerializeField] private float defaultMinimizeDuration;
 		[SerializeField] private float defaultMaximizeDuration;
 		[SerializeField] private float defaultRestoreDuration;
@@ -100,12 +101,13 @@ namespace ProjWindow.GUI
 		[SerializeField] private bool isResizing;
 		[SerializeField] private Vector2 lastSize;
 		[SerializeField] private SizeState sizeState;
-		private Vector2 resizeEnterSize;
-		private Vector2 resizeHandlerFocus;
-		private Vector2 resizeHandlerDragNowPos;
+		[SerializeField] private Vector2 resizeEnterSize;
+		[SerializeField]private Vector2 resizeHandlerFocus;
+		[SerializeField]private Vector2 resizeHandlerDragNowPos;
 		private FloatDelegate minimizeProduction;
 		private FloatDelegate maximizeProduction;
 		private FloatDelegate restoreProduction;
+		[SerializeField] private Vector2 cacedSize;
 
 		public void SetMinimize()
 		{
@@ -216,11 +218,13 @@ namespace ProjWindow.GUI
 				// 현재 마우스 위치를 가져옴
 				resizeHandlerDragNowPos = MouseInteract.GetCanvasPosition(Input.mousePosition, canvas);
 
-				//사이즈 조절
 				Vector2 frontPoint = lastPosition - resizeHandlerFocus * (lastSize / 2);
-				Vector2 backPoint = resizeHandlerDragNowPos;
+				Vector2 backPoint = resizeHandlerDragNowPos
+					+ Vector2.down * GUI.StaticUIObject.instance.GetTaskBarSize().y / 2;
+				Vector2 direction = backPoint - frontPoint;
 
-				Vector2 addScale = (backPoint - frontPoint).Abs();
+				//사이즈 조절
+				Vector2 addScale = (direction).Abs();
 				//-커지는 방향 보정
 				addScale *= resizeHandlerFocus.Abs();
 				//-이외의 요소 고정
@@ -228,8 +232,10 @@ namespace ProjWindow.GUI
 				if (fix.x != 0 && fix.y != 0) fix = Vector2.zero;
 				Vector2 fixScale = fix * resizeEnterSize;
 
-				rectTransform.sizeDelta = addScale + fixScale;
-				lastSize = rectTransform.sizeDelta;
+				Vector2 newSize = addScale + fixScale;
+				Vector2 cacedSize = newSize.Max(minSize);
+				rectTransform.sizeDelta = cacedSize;
+				lastSize = cacedSize;
 
 				//위치 조절
 				Vector2 addPos = (backPoint + frontPoint) / 2;
@@ -237,8 +243,17 @@ namespace ProjWindow.GUI
 				addPos *= resizeHandlerFocus.Abs();
 				//-이외의 요소 고정
 				Vector2 fixPos = fix * lastPosition;
-				rectTransform.anchoredPosition = addPos + fixPos;
-				lastPosition = rectTransform.anchoredPosition;
+				Vector2 position = addPos + fixPos;
+
+				position = new Vector2(
+						(cacedSize.x <= minSize.x) || (resizeHandlerFocus.x * (direction.x) < 0) ? rectTransform.anchoredPosition.x : position.x,
+						(cacedSize.y <= minSize.y) || (resizeHandlerFocus.y * (direction.y) < 0) ? rectTransform.anchoredPosition.y : position.y);
+				this.cacedSize = cacedSize;
+
+				if (rectTransform.anchoredPosition.x != position.x)
+					Debug.Log("!");
+
+				SetAnchoredPos(position);
 			}
 		}
 
@@ -256,11 +271,17 @@ namespace ProjWindow.GUI
 			dragModule.SetDragPosDelegate(()=>MouseInteract.GetCanvasPosition(Input.mousePosition, canvas));
 
 			lastSize = rectTransform.sizeDelta;
+			lastPosition = rectTransform.anchoredPosition;
 		}
 		private void Update()
 		{
 			dragModule.DragUpdate();
 			ResizeUpdate();
+		}
+		private void SetAnchoredPos(Vector2 position)
+		{
+			rectTransform.anchoredPosition = position;
+			lastPosition = position;
 		}
 	}
 }

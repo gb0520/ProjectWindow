@@ -24,46 +24,7 @@ namespace ProjWindow.Sub.UI
 		private Booldelegate dragEnterCondition;
 		private UnityEvent dragExitEvent = new UnityEvent();
 		private UnityEvent dragUpdateEvent = new UnityEvent();
-
-		public void SetDragExitAction(UnityAction action)
-		{
-			dragExitEvent.AddListener(action);
-		}
-		public void SetDragUpdateAction(UnityAction action)
-		{
-			dragUpdateEvent.AddListener(action);
-		}
-
-		public void SetDragEnter()
-		{
-			isPlaying = true;
-			enterPosition = MouseInteract.GetCanvasPosition(Input.mousePosition, targetCanvas);
-		}
-		public void DragUpdate()
-		{
-			if (!isPlaying)
-			{
-				if (dragEnterCondition.Invoke())
-				{
-					isPlaying = true;
-					enterPosition = MouseInteract.GetCanvasPosition(Input.mousePosition, targetCanvas);
-				}
-			}
-
-			if (isPlaying)
-			{
-				nowPosition = MouseInteract.GetCanvasPosition(Input.mousePosition, targetCanvas);
-				direction = nowPosition - enterPosition;
-
-				dragUpdateEvent.Invoke();
-
-				if (dragExitCondition.Invoke())
-				{
-					exitPosition = nowPosition;
-					DragExit();
-				}
-			}
-		}
+		private Vector2Delegate dragPosition;
 
 		/// <summary>
 		/// 초기화 - 드래그 시작 조건
@@ -82,6 +43,30 @@ namespace ProjWindow.Sub.UI
 			this.dragExitCondition = boolDelegate;
 		}
 		/// <summary>
+		/// 드래그 종료 콜백
+		/// </summary>
+		/// <param name="action"></param>
+		public void SetDragExitAction(UnityAction action)
+		{
+			dragExitEvent.AddListener(action);
+		}
+		/// <summary>
+		/// 드래그 진행 콜백
+		/// </summary>
+		/// <param name="action"></param>
+		public void SetDragUpdateAction(UnityAction action)
+		{
+			dragUpdateEvent.AddListener(action);
+		}
+		/// <summary>
+		/// 드래그 위치 지정
+		/// </summary>
+		/// <param name="vector2Delegate"></param>
+		public void SetDragPosDelegate(Vector2Delegate vector2Delegate)
+		{
+			this.dragPosition = vector2Delegate;
+		}
+		/// <summary>
 		/// 초기화 - 대상 캔버스
 		/// </summary>
 		/// <param name="canvas"></param>
@@ -90,12 +75,44 @@ namespace ProjWindow.Sub.UI
 			targetCanvas = canvas;
 		}
 
+		public void DragUpdate()
+		{
+			if (!isPlaying)
+			{
+				if (dragEnterCondition.Invoke())
+				{
+					isPlaying = true;
+					enterPosition = GetDragPosition();
+				}
+			}
+
+			if (isPlaying)
+			{
+				nowPosition = GetDragPosition();
+				direction = nowPosition - enterPosition;
+
+				dragUpdateEvent.Invoke();
+
+				if (dragExitCondition.Invoke())
+				{
+					exitPosition = nowPosition;
+					DragExit();
+				}
+			}
+		}
+
+
 		private void DragExit()
 		{
 			isPlaying = false;
 			dragExitEvent?.Invoke();
 			dragExitEvent.RemoveAllListeners();
-			exitPosition = MouseInteract.GetCanvasPosition(Input.mousePosition, targetCanvas);
+			exitPosition = GetDragPosition();
+		}
+		private Vector2 GetDragPosition()
+		{
+			Vector2 result = dragPosition.Invoke();
+			return result;
 		}
 	}
 }

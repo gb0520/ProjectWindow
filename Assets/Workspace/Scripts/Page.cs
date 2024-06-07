@@ -52,6 +52,11 @@ namespace ProjWindow.GUI
 			Close();
 		}
 
+		public void OnPageSelect()
+		{
+			transform.SetAsLastSibling();
+		}
+
 		#region TitleBar
 		[Title("TitleBar - Editable")]
 		public bool isDragMoveable;
@@ -245,13 +250,15 @@ namespace ProjWindow.GUI
 				Vector2 fixPos = fix * lastPosition;
 				Vector2 position = addPos + fixPos;
 
-				position = new Vector2(
-						(cacedSize.x <= minSize.x) || (resizeHandlerFocus.x * (direction.x) < 0) ? rectTransform.anchoredPosition.x : position.x,
-						(cacedSize.y <= minSize.y) || (resizeHandlerFocus.y * (direction.y) < 0) ? rectTransform.anchoredPosition.y : position.y);
-				this.cacedSize = cacedSize;
+				float x = rectTransform.anchoredPosition.x;
+				float y = rectTransform.anchoredPosition.y;
+				if (lastSize.x > minSize.x && (resizeHandlerFocus.x * (direction.x) >= 0)) x = position.x;
+				if (lastSize.y > minSize.y && (resizeHandlerFocus.y * (direction.y) >= 0)) y = position.y;
+				//if (lastSize.x >= minSize.x && newSize.x >= minSize.x) x = position.x;
+				//if (lastSize.y >= minSize.y && newSize.y >= minSize.y) y = position.y;
 
-				if (rectTransform.anchoredPosition.x != position.x)
-					Debug.Log("!");
+				position = new Vector2(x, y);
+				this.cacedSize = cacedSize;
 
 				SetAnchoredPos(position);
 			}

@@ -12,6 +12,7 @@ namespace ProjWindow.GUI
 		[SerializeField] private Canvas mainCanvas;
 		[SerializeField] private RectTransform taskBarTransform;
 		[SerializeField] private RectTransform withoutTaskBarTransform;
+		[SerializeField] private RectTransform pageArea;
 
 		public Canvas GetMainCanvas()
 		{
@@ -30,6 +31,11 @@ namespace ProjWindow.GUI
 			size -= taskBarTransform.sizeDelta;
 
 			return size;
+		}
+
+		public void SetParentPageArea(Transform transform)
+		{
+			pageArea.SetParentWithAdapt(transform);
 		}
 
 		private void Awake()
